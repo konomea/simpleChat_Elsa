@@ -43,7 +43,12 @@ public class ChatClient extends AbstractClient
   {
     super(host, port); //Call the superclass constructor
     this.clientUI = clientUI;
-    openConnection();
+    try {
+    	openConnection();
+    }
+    catch(IOException e) {
+    	connectionException();
+    }
   }
 
   
@@ -76,6 +81,24 @@ public class ChatClient extends AbstractClient
         ("Could not send message to server.  Terminating client.");
       quit();
     }
+  }
+  
+  
+  /**
+ * This method is called when openConnection() has an I/O exception (server closed)
+ * Sends message to UI then calls connectionClosed()
+ */
+public void connectionException() {
+	  clientUI.display("Server has shut down. Ending Connection.");
+	  connectionClosed();
+  }
+  
+  /**
+ * This method is called after the connection has been closed. 
+ * Calls quit() to terminate client.
+ */
+public void connectionClosed() {
+	  quit();
   }
   
   /**
