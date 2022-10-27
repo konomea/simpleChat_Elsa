@@ -66,16 +66,49 @@ public class ChatClient extends AbstractClient
    */
   public void handleMessageFromClientUI(String message)
   {
-    try
-    {
-      sendToServer(message);
-    }
-    catch(IOException e)
-    {
-      clientUI.display
-        ("Could not send message to server.  Terminating client.");
-      quit();
-    }
+	  if(message.charAt(0) == '#') {	//we have a command
+		  String[] arguments = message.substring(1).split(" ");
+		  String command = arguments[0];
+		  switch(command) {
+		  case "quit": quit(); break;
+		  
+		  /* TODO: if you log out then try to send a message it creates an error the ends the session*/
+		  case "logoff": try {closeConnection();} 
+		  	catch(IOException e){System.out.println("Could not close the connection.");} break;
+		  
+		  case "sethost": if(isConnected()) {System.out.println("Cannot change host when connected.");}
+		  	else {setHost(arguments[1]); System.out.println("Host changed to " + arguments[1]);} 
+		  	break;
+		  
+		  case "setport": if(isConnected()) {System.out.println("Cannot change port when connected.");}
+		  	else {setPort(Integer.parseInt(arguments[1])); System.out.println("Port changed to " + arguments[1]);}
+		  	break;
+		  
+		  case "login": if(isConnected()) {System.out.println("Already logged in.");}
+		  	else {try{openConnection();} catch(IOException e){System.out.println("Could not login.");;}}
+		  	break;
+		  
+		  case "gethost": System.out.println("Host is: " + getHost()); break;
+		  
+		  case "getport": System.out.println("Port is: " + getPort()); break;
+		  
+		  default: System.out.println("Not a valid command.");
+		  }
+	  }
+	  
+	  else { //regular message
+		  try
+		    {
+		      sendToServer(message);
+		    }
+		    catch(IOException e)
+		    {
+		      clientUI.display
+		        ("Could not send message to server.  Terminating client.");
+		      quit();
+		    }
+	  }
+    
   }
   
   public void connectionClosed() {
