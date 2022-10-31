@@ -49,11 +49,29 @@ public class EchoServer extends AbstractServer
    * @param msg The message received from the client.
    * @param client The connection from which the message originated.
    */
-  public void handleMessageFromClient
-    (Object msg, ConnectionToClient client)
+  public void handleMessageFromClient(Object msg, ConnectionToClient client)
   {
-    System.out.println("Message received: " + msg + " from " + client);
-    this.sendToAllClients(client.getName()+ ": " + msg);
+	  if(msg.toString().charAt(0) == '#') {
+		  String[] arguments = msg.toString().split(" ");
+		  if(arguments[0].equals("#login")) {
+			  if(client.getInfo("loginID") == null) {
+				  client.setInfo("loginID", arguments[1]);
+			  }
+			  else {
+				  try{
+					  client.sendToClient("You cannot set another loginID.");
+					  client.close();
+				  }
+				  catch(IOException e){}
+			  }
+		  }
+		  System.out.println("Message received: #login " + arguments[1] + " from null");
+		  clientConnected(client);
+	  }
+	  else {
+		  System.out.println("Message received: " + msg + " from " + client.getInfo("loginID"));
+		  this.sendToAllClients(client.getInfo("loginID")+ "> " + msg);
+	  }
   }
     
   /**
@@ -77,13 +95,24 @@ public class EchoServer extends AbstractServer
   }
   
   protected void clientConnected(ConnectionToClient client) {
-	  String s = client.getName() + " has connected.";
-	  sendToAllClients(s);
-	  System.out.println(s);
+	  
+	  if(client.getInfo("loginID") != null) {
+		  String s = client.getInfo("loginID") + " has logged on.";
+		  sendToAllClients(s);
+		  System.out.println(s);
+	  }
+	  else {
+		  System.out.println("A new client has connected to the server.");
+	  }
   }
   
-  synchronized protected void clientDisconnected(ConnectionToClient client) {
-	  String s = client.getName() + " has disconnected.";
+  
+  /**
+ * Called in ConnectionToClient for each client thread.
+ * Prints a message that 'loginID' has disconnected.
+ */
+synchronized protected void clientDisconnected(ConnectionToClient client) {
+	  String s = client.getInfo("loginID") + " has disconnected.";
 	  sendToAllClients(s);
 	  System.out.println(s);
    }
@@ -94,14 +123,15 @@ public class EchoServer extends AbstractServer
 			String command = arguments[0];
 			
 			switch(command) {
-			case "quit": stopListening();
-				try{close();} catch(IOException e) {System.exit(1);}  //abnormal exit
+			case "quit": stopListening(); try{close();} // terminates the server
+				catch(IOException e) {System.exit(1);}  //abnormal exit
 				System.exit(0); //normal exit
 				break;
 			
-			case "stop":  stopListening(); break;
+			case "stop":  stopListening(); break; //doesn't terminate, just stops listening
 			
-			case "close": stopListening(); try {close();} catch(IOException e) {} break;
+			case "close": stopListening(); // stops listening and closes all connections but doesn't terminate
+			try {close();} catch(IOException e) {} break;
 			
 			case "setport": if(getNumberOfClients()==0 && ! isListening()) {super.setPort(Integer.parseInt(arguments[1]));}
 			else {System.out.println("Cannot change port while server is connected.");}
@@ -116,10 +146,12 @@ public class EchoServer extends AbstractServer
 			default: System.out.println("Not a valid command.");
 			}
 		}
-		else {
-            this.sendToAllClients("SERVER MESSAGE: "+message);
+		else { 	// message is not a command
+            this.sendToAllClients("SERVER MESSAGE> "+message);
             serverUI.display(message);
         }
+	}
+	
 	}
   //Class methods ***************************************************
   
@@ -131,5 +163,5 @@ public class EchoServer extends AbstractServer
    *          if no argument is entered.
    */
 
-}
+
 //End of EchoServer class
