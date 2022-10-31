@@ -75,7 +75,6 @@ public class ChatClient extends AbstractClient
 		  switch(command) {
 		  case "quit": quit(); break;
 		  
-		  /* TODO: if you log out then try to send a message it creates an error the ends the session*/
 		  case "logoff": try {closeConnection();} 
 		  	catch(IOException e){System.out.println("Could not close the connection.");} break;
 		  
