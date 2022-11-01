@@ -1,7 +1,4 @@
-import java.io.IOException;
 import java.util.Scanner;
-
-import client.ChatClient;
 import common.ChatIF;
 
 public class ServerConsole implements ChatIF {
@@ -39,7 +36,7 @@ public class ServerConsole implements ChatIF {
 		System.out.println("SERVER MESSAGE> " + message);
 	}
 	
-	  public static void main(String[] args) 
+	  public static void main(String[] args)
 	  {
 	    int port = 0; //Port to listen on
 
